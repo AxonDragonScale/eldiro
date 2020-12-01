@@ -28,6 +28,29 @@ pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
     take_while(|c| c == ' ', s)
 }
 
+pub(crate) fn extract_ident(s: &str) -> (&str, &str) {
+    let input_starts_with_alphabetic = s
+        .chars()
+        .next()
+        .map(|c| c.is_ascii_alphabetic())
+        .unwrap_or(false);
+    // If the input doesnt start with an alphabet, it cant be an identifier
+    // and we dont consume anything
+    if input_starts_with_alphabetic {
+        take_while(|c| c.is_ascii_alphanumeric(), s)
+    } else {
+        (s, "")
+    }
+}
+
+pub(crate) fn tag<'a, 'b>(starting_text: &'a str, s: &'b str) -> &'b str {
+    if s.starts_with(starting_text) {
+        &s[starting_text.len()..]
+    } else {
+        panic!("Expected {}", starting_text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -74,5 +97,25 @@ mod tests {
     #[test]
     fn extract_spaces() {
         assert_eq!(extract_whitespace("    1"), ("1", "    "));
+    }
+
+    #[test]
+    fn extract_alphabetic_ident() {
+        assert_eq!(extract_ident("abc stop"), (" stop", "abc"));
+    }
+
+    #[test]
+    fn extract_alphanumeric_ident() {
+        assert_eq!(extract_ident("foo1()"), ("()", "foo1"));
+    }
+
+    #[test]
+    fn dont_extract_ident_starting_with_number() {
+        assert_eq!(extract_ident("12ronak"), ("12ronak", ""));
+    }
+
+    #[test]
+    fn tag_word() {
+        assert_eq!(tag("let", "let a"), " a");
     }
 }

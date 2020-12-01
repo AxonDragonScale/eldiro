@@ -1,15 +1,3 @@
-pub(crate) fn extract_digits(s: &str) -> (&str, &str) {
-    // Find the index of the first non-digit character
-    let digits_end = s
-        .char_indices()
-        .find_map(|(idx, c)| if c.is_ascii_digit() { None } else { Some(idx) })
-        .unwrap_or_else(|| s.len()); // this is a lambda func that takes 0 args
-
-    let digits = &s[..digits_end];
-    let remainder = &s[digits_end..];
-    (remainder, digits)
-}
-
 pub(crate) fn extract_op(s: &str) -> (&str, &str) {
     // Check if the first char is an operator or panic
     match &s[0..1] {
@@ -18,6 +6,26 @@ pub(crate) fn extract_op(s: &str) -> (&str, &str) {
     }
 
     (&s[1..], &s[0..1])
+}
+
+pub(crate) fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
+    // Find index of first character thats not accepted
+    let extracted_end = s
+        .char_indices()
+        .find_map(|(idx, c)| if accept(c) { None } else { Some(idx) })
+        .unwrap_or_else(|| s.len());
+
+    let extracted = &s[..extracted_end];
+    let remainder = &s[extracted_end..];
+    (remainder, extracted)
+}
+
+pub(crate) fn extract_digits(s: &str) -> (&str, &str) {
+    take_while(|c| c.is_ascii_digit(), s)
+}
+
+pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
+    take_while(|c| c == ' ', s)
 }
 
 #[cfg(test)]
@@ -61,5 +69,10 @@ mod tests {
     #[test]
     fn extract_slash() {
         assert_eq!(extract_op("/2"), ("2", "/"));
+    }
+
+    #[test]
+    fn extract_spaces() {
+        assert_eq!(extract_whitespace("    1"), ("1", "    "));
     }
 }

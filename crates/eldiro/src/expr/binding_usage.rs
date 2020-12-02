@@ -1,3 +1,5 @@
+use super::FuncCall;
+
 use crate::env::Env;
 use crate::utils;
 use crate::val::Val;
@@ -20,7 +22,19 @@ impl BindingUsage {
     }
 
     pub(super) fn eval(&self, env: &Env) -> Result<Val, String> {
-        env.get_binding(&self.name)
+        // First try to get binding with given name, if there is none
+        // then it may be a func call without parameters
+        env.get_binding(&self.name).or_else(|err_msg| {
+            if env.get_func(&self.name).is_ok() {
+                FuncCall {
+                    callee: self.name.clone(),
+                    params: Vec::new(),
+                }
+                .eval(env)
+            } else {
+                Err(err_msg)
+            }
+        })
     }
 }
 

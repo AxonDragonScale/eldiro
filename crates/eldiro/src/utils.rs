@@ -1,4 +1,4 @@
-fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
+pub(crate) fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
     // Find index of first character thats not accepted
     let extracted_end = s
         .char_indices()
@@ -11,7 +11,7 @@ fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
 }
 
 // This is for when take_while is required to extract something or give error
-fn take_while_req(
+pub(crate) fn take_while_req(
     accept: impl Fn(char) -> bool,
     s: &str,
     error_msg: String,
@@ -68,6 +68,7 @@ pub(crate) fn tag<'a, 'b>(starting_text: &'a str, s: &'b str) -> Result<&'b str,
 
 pub(crate) fn sequence<T>(
     parser: impl Fn(&str) -> Result<(&str, T), String>,
+    seperator_parser: impl Fn(&str) -> (&str, &str),
     mut s: &str,
 ) -> Result<(&str, Vec<T>), String> {
     let mut items = Vec::new();
@@ -75,11 +76,25 @@ pub(crate) fn sequence<T>(
     while let Ok((new_s, item)) = parser(s) {
         items.push(item);
 
-        let (new_s, _) = extract_whitespace(new_s);
+        let (new_s, _) = seperator_parser(new_s);
         s = new_s;
     }
 
     Ok((s, items))
+}
+
+pub(crate) fn sequence_req<T>(
+    parser: impl Fn(&str) -> Result<(&str, T), String>,
+    seperator_parser: impl Fn(&str) -> (&str, &str),
+    s: &str,
+) -> Result<(&str, Vec<T>), String> {
+    let (s, sequence) = sequence(parser, seperator_parser, s)?;
+
+    if sequence.is_empty() {
+        Err("Expected a sequence with atleast one item".to_string())
+    } else {
+        Ok((s, sequence))
+    }
 }
 
 #[cfg(test)]

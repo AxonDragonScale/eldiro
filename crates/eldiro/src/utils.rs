@@ -1,4 +1,4 @@
-pub(crate) fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
+fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
     // Find index of first character thats not accepted
     let extracted_end = s
         .char_indices()
@@ -11,7 +11,7 @@ pub(crate) fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str)
 }
 
 // This is for when take_while is required to extract something or give error
-pub(crate) fn take_while_req(
+fn take_while_req(
     accept: impl Fn(char) -> bool,
     s: &str,
     error_msg: String,
